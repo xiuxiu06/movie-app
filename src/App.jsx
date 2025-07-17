@@ -26,19 +26,21 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [trendingMovies, setTrendingMovies] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   // Debounce the search term to prevent making too many API requests
   // by waiting for the user to stop typing for 500ms
   useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm])
 
-  const fetchMovies = async (query = '') => {
+  const fetchMovies = async (query = '', pageNumber = 1) => {
     setIsLoading(true);
     setErrorMessage('');
 
     try {
       const endpoint = query
-        ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
-        : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc`;
+        ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&page=${pageNumber}`
+        : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc&page=${pageNumber}`;
 
       const response = await fetch(endpoint, API_OPTIONS);
 
@@ -54,11 +56,18 @@ const App = () => {
         return;
       }
 
-      setMovieList(data.results || []);
+      // Check if we've reached the last page
+      setHasMore(data.page < data.total_pages);
+      
+      // If it's page 1, replace the list, otherwise append
+      if (pageNumber === 1) {
+        setMovieList(data.results || []);
+      } else {
+        setMovieList(prevMovies => [...prevMovies, ...(data.results || [])]);
+      }
 
-      if(query && data.results.length > 0) {
+      if(query && data.results.length > 0 && pageNumber === 1) {
         await updateSearchCount(query, data.results[0]);
-        // Add this line to reload trending movies after updating search count
         await loadTrendingMovies();
       }
     } catch (error) {
@@ -79,13 +88,38 @@ const App = () => {
     }
   }
 
-  useEffect(() => {
-    fetchMovies(debouncedSearchTerm);
-  }, [debouncedSearchTerm]);
+  const handleScroll = () => {
+    // Don't fetch if we're already loading or there's no more data
+    if (isLoading || !hasMore) return;
+    
+    // Check if we're near bottom of page
+    const scrollPosition = window.innerHeight + document.documentElement.scrollTop;
+    const scrollThreshold = document.documentElement.offsetHeight - 300;
+    
+    if (scrollPosition >= scrollThreshold) {
+      setPage(prevPage => prevPage + 1);
+    }
+  };
 
+  // Listen for scroll events
   useEffect(() => {
-    loadTrendingMovies();
-  }, []);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isLoading, hasMore]); // Re-add listener if these dependencies change
+
+  // Load more movies when page changes
+  useEffect(() => {
+    if (page > 1) {
+      fetchMovies(debouncedSearchTerm, page);
+    }
+  }, [page]);
+
+  // Reset pagination when search term changes
+  useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+    fetchMovies(debouncedSearchTerm, 1);
+  }, [debouncedSearchTerm]);
 
   return (
     <main>
@@ -120,16 +154,26 @@ const App = () => {
         <section className="all-movies">
           <h2>All Movies</h2>
 
-          {isLoading ? (
-            <Spinner />
-          ) : errorMessage ? (
+          {errorMessage ? (
             <p className="text-red-500">{errorMessage}</p>
           ) : (
-            <ul>
-              {movieList.map((movie) => (
-                <MovieCard key={movie.id} movie={movie} />
-              ))}
-            </ul>
+            <>
+              <ul>
+                {movieList.map((movie) => (
+                  <MovieCard key={movie.id} movie={movie} />
+                ))}
+              </ul>
+              
+              {isLoading && (
+                <div className="flex justify-center mt-8">
+                  <Spinner />
+                </div>
+              )}
+              
+              {!hasMore && movieList.length > 0 && (
+                <p className="text-center mt-8">No more movies to load</p>
+              )}
+            </>
           )}
         </section>
       </div>
