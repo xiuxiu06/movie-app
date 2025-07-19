@@ -36,7 +36,8 @@
   }
 
   main {
-    @apply min-h-screen relative bg-primary;
+    @apply min-h-screen relative;
+    /* Remove bg-primary if it's setting a solid background */
   }
 
   header {
@@ -50,7 +51,16 @@
 
 @layer components {
   .pattern {
-    @apply bg-hero-pattern w-full h-screen bg-center bg-cover absolute z-0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* More dramatic animated gradient */
+    background: linear-gradient(-45deg, #030014, #160038, #001f40, #000751);
+    background-size: 400% 400%;
+    animation: gradientBG 10s ease infinite;
+    z-index: 5; /* Temporarily increase to see if it's visible */
   }
 
   .wrapper {
@@ -102,7 +112,10 @@
   }
 
   .movie-card {
-    @apply bg-dark-100 p-5 rounded-2xl shadow-inner shadow-light-100/10;
+    @apply bg-dark-100/60 p-5 rounded-2xl shadow-light-100/10;
+    /* Changed from /80 to /60 to make it more transparent */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 
     & img {
       @apply rounded-lg h-auto w-full;
@@ -159,4 +172,10 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50% }
+  50% { background-position: 100% 50% }
+  100% { background-position: 0% 50% }
 }

@@ -176,6 +176,10 @@ const App = () => {
             </>
           )}
         </section>
+
+        <div className="fixed bottom-4 right-4 bg-black bg-opacity-75 text-white px-3 py-2 rounded-full text-xs shadow-lg">
+          Made by <span className="font-semibold">Tam 😻</span> | Powered by <span className="font-semibold">TMDB</span>
+        </div>
       </div>
     </main>
   )
