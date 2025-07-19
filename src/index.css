@@ -46,6 +46,7 @@
 
   header img {
     @apply w-full max-w-lg h-auto object-contain mx-auto drop-shadow-md;
+    animation: float 6s ease-in-out infinite;
   }
 }
 
@@ -57,7 +58,7 @@
     width: 100%;
     height: 100%;
     /* More dramatic animated gradient */
-    background: linear-gradient(-45deg, #030014, #160038, #001f40, #000751);
+    background: linear-gradient(-45deg, #030014, #160038, #25102c, #130117);
     background-size: 400% 400%;
     animation: gradientBG 10s ease infinite;
     z-index: 5; /* Temporarily increase to see if it's visible */
@@ -178,4 +179,17 @@
   0% { background-position: 0% 50% }
   50% { background-position: 100% 50% }
   100% { background-position: 0% 50% }
+}
+
+/* Add this keyframe animation after your gradientBG keyframes */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
