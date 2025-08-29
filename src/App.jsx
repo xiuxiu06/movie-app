@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Search from './components/Search.jsx'
 import Spinner from './components/Spinner.jsx'
 import MovieCard from './components/MovieCard.jsx'
 import { useDebounce } from 'react-use'
 import { getTrendingMovies, updateSearchCount } from './appwrite.js'
 
+gsap.registerPlugin(ScrollTrigger);
+
 const API_BASE_URL = 'https://api.themoviedb.org/3';
-
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-
 const API_OPTIONS = {
   method: 'GET',
   headers: {
@@ -20,14 +22,18 @@ const API_OPTIONS = {
 const App = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [searchTerm, setSearchTerm] = useState('');
-
   const [movieList, setMovieList] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
   const [trendingMovies, setTrendingMovies] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+
+  // Ref for the hero image
+  const heroImgRef = useRef(null);
+  const cardsRef = useRef([]);
+  const patternRef = useRef(null);
+  const wiggleRef = useRef(null);
 
   // Debounce the search term to prevent making too many API requests
   // by waiting for the user to stop typing for 500ms
@@ -121,55 +127,198 @@ const App = () => {
     fetchMovies(debouncedSearchTerm, 1);
   }, [debouncedSearchTerm]);
 
+  // Animate hero image on scroll
+  useEffect(() => {
+    if (heroImgRef.current) {
+      // ScrollTrigger entrance animation
+      gsap.fromTo(
+        heroImgRef.current,
+        { scale: 0.9, autoAlpha: 0 },
+        {
+          scale: 1,
+          autoAlpha: 1,
+          duration: 1.2,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: heroImgRef.current,
+            start: "top 80%",
+            toggleActions: "play none none none"
+          }
+        }
+      );
+      // Floating animation (continuous)
+      gsap.to(heroImgRef.current, {
+        y: -16,
+        duration: 2.5,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+      });
+    }
+  }, []);
+
+  // Animate movie cards on load
+  useEffect(() => {
+    if (cardsRef.current.length) {
+      // Animate only the last batch of cards (e.g., the last 20)
+      const batchSize = 20;
+      const startIdx = Math.max(cardsRef.current.length - batchSize, 0);
+      const newCards = cardsRef.current.slice(startIdx);
+
+      gsap.fromTo(
+        newCards,
+        { autoAlpha: 0, y: 40 },
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.08,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: ".all-movies ul",
+            start: "top 90%",
+          }
+        }
+      );
+    }
+  }, [movieList]);
+
+  // Animate background pattern with gradient shift
+  useEffect(() => {
+    if (patternRef.current) {
+      gsap.to(patternRef.current, {
+        backgroundPosition: "200% 100%",
+        duration: 16,
+        repeat: -1,
+        ease: "linear",
+        yoyo: true
+      });
+    }
+  }, []);
+
+  // Animate SVG wiggle line on scroll
+  useEffect(() => {
+    const path = document.getElementById('wiggle-path');
+    if (path) {
+      const length = path.getTotalLength();
+      path.style.strokeDasharray = length;
+      path.style.strokeDashoffset = length;
+
+      gsap.to(path, {
+        strokeDashoffset: 0,
+        ease: "power1.inOut",
+        scrollTrigger: {
+          trigger: ".wrapper",
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 1
+        }
+      });
+
+      // Animate the wiggle horizontally
+      gsap.to(path, {
+        keyframes: [
+          { attr: { d: "M 200 0 Q 100 200 200 400 T 250 800 T 150 1200 T 200 1600" }, duration: 2 },
+          { attr: { d: "M 200 0 Q 300 200 200 400 T 150 800 T 250 1200 T 200 1600" }, duration: 2 },
+          { attr: { d: "M 200 0 Q 100 200 200 400 T 200 800 T 200 1200 T 200 1600" }, duration: 2 }
+        ],
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+      });
+    }
+  }, []);
+
   return (
     <main>
-      <div className="pattern"/>
-
+      <div
+        className="pattern"
+        style={{
+          pointerEvents: 'none',
+          zIndex: 4,
+          position: 'fixed',
+          width: '100vw',
+          height: '100vh',
+          top: 0,
+          left: 0,
+        }}
+      >
+        <svg
+          id="wiggle-svg"
+          width="100vw"
+          height="100vh"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: 4,
+            filter: 'blur(8px)', // Silk effect
+            opacity: 0.7,        // Silk effect
+            pointerEvents: 'none'
+          }}
+        >
+          <defs>
+            <linearGradient id="silk-gradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#a21caf" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#a21caf" stopOpacity="0.7" />
+            </linearGradient>
+          </defs>
+          <path
+            id="wiggle-path"
+            d="M 200 0 Q 100 200 200 400 Q 300 600 200 800"
+            stroke="url(#silk-gradient)"
+            strokeWidth="56"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
       <div className="wrapper">
         <header>
-          <img src="./hero.png" alt="Hero Banner" />
+          <img ref={heroImgRef} src="./hero.png" alt="Hero Banner" />
           <h1>Find <span className="text-gradient">Movies</span> You'll Enjoy Without the Hassle</h1>
-
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </header>
 
-        {(trendingMovies.length > 0 || true) && (
-          <section className="trending">
-            <h2>Trending Movies</h2>
-            {trendingMovies.length === 0 ? (
-              <p>No trending movies yet</p>
-            ) : (
-              <ul>
-                {trendingMovies.map((movie, index) => (
-                  <li key={movie.$id}>
-                    <p>{index + 1}</p>
-                    <img src={movie.poster_url} alt={movie.searchTerm} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        )}
+        <section className="trending">
+          <h2>Trending Movies</h2>
+          {trendingMovies.length === 0 ? (
+            <p>No trending movies yet</p>
+          ) : (
+            <ul>
+              {trendingMovies.map((movie, index) => (
+                <li key={movie.$id}>
+                  <p>{index + 1}</p>
+                  <img src={movie.poster_url} alt={movie.searchTerm} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         <section className="all-movies">
           <h2>All Movies</h2>
-
           {errorMessage ? (
             <p className="text-red-500">{errorMessage}</p>
           ) : (
             <>
               <ul>
-                {movieList.map((movie) => (
-                  <MovieCard key={movie.id} movie={movie} />
+                {movieList.map((movie, idx) => (
+                  <div
+                    key={movie.id}
+                    ref={el => (cardsRef.current[idx] = el)}
+                  >
+                    <MovieCard movie={movie} />
+                  </div>
                 ))}
               </ul>
-              
               {isLoading && (
                 <div className="flex justify-center mt-8">
                   <Spinner />
                 </div>
               )}
-              
               {!hasMore && movieList.length > 0 && (
                 <p className="text-center mt-8">No more movies to load</p>
               )}
