@@ -25,6 +25,7 @@
     font-family: "DM Sans", serif;
     font-optical-sizing: auto;
     background: #030014;
+    cursor: none;
   }
 
   h1 {
@@ -152,6 +153,23 @@
     & .content .year {
       @apply text-gray-100 font-medium text-base;
     }
+  }
+
+  #custom-cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    background: radial-gradient(circle, #a21caf 60%, #3b82f6 100%);
+    box-shadow: 0 0 24px 8px #a21caf88, 0 0 0 2px #fff2;
+    mix-blend-mode: lighten;
+    opacity: 0.85;
+    transform: translate(-50%, -50%);
+    transition: background 0.2s, box-shadow 0.2s;
   }
 }
 

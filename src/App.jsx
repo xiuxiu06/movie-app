@@ -229,6 +229,19 @@ const App = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const cursor = document.getElementById('custom-cursor');
+    if (!cursor) return;
+
+    const moveCursor = (e) => {
+      cursor.style.left = `${e.clientX}px`;
+      cursor.style.top = `${e.clientY}px`;
+    };
+
+    window.addEventListener('mousemove', moveCursor);
+    return () => window.removeEventListener('mousemove', moveCursor);
+  }, []);
+
   return (
     <main>
       <div
@@ -275,6 +288,7 @@ const App = () => {
           />
         </svg>
       </div>
+      <div id="custom-cursor"></div>
       <div className="wrapper">
         <header>
           <img ref={heroImgRef} src="./hero.png" alt="Hero Banner" />
