@@ -285,6 +285,8 @@ const App = () => {
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
+            strokeDasharray="2000"
+            strokeDashoffset="2000"
           />
         </svg>
       </div>
