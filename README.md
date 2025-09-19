@@ -2,7 +2,9 @@
 
 A modern, responsive movie discovery web application built with React and powered by TMDB API. Features infinite scroll, real-time trending system, and stunning visual effects.
 
-![Movie App Demo](hero.png)
+## 📱 Demo
+
+🔗 **Live Demo**: [https://xiuxiu06.github.io/movie-app/](https://xiuxiu06.github.io/movie-app/)
 
 ## ✨ Features
 
@@ -87,10 +89,6 @@ The Appwrite database stores trending search data with the following structure:
   $updatedAt: "timestamp"   // Auto-generated timestamp
 }
 ```
-
-## 📱 Demo
-
-🔗 **Live Demo**: [https://xiuxiu06.github.io/movie-app/](https://xiuxiu06.github.io/movie-app/)
 
 ## 🏗️ Architecture
 
